@@ -2,6 +2,9 @@
 
 @section('content')
 
+<link rel="stylesheet" href="{{ asset('/statics/plugin/bootstrap-treeview/css/bootstrap-treeview.css') }}" />
+<script src="{{ asset('/statics/plugin/bootstrap-treeview/js/bootstrap-treeview.js') }}"></script>
+
 <!-- Main content -->
 <section class="content">
     <div class="row">
@@ -16,7 +19,7 @@
             </div>
             @endif
             <div class="box">
-                <form action="{{isset($show['role']->id)?'/admin/role/update/'.$show['role']->id:'/admin/role/create/'}}" method="post">
+                <form action="{{isset($show['role']->id)?'/admin/role/update/'.$show['role']->id:'/admin/role/create/'}}" method="post" id="form">
                     <div class="box-header">
                     </div><!-- /.box-header -->
                     <div class="box-body table-responsive no-padding">
@@ -34,30 +37,52 @@
                             <input name='name' type="text" class="form-control" placeholder="标示符" 
                             value='{{isset($show['role']->name)?$show['role']->name:''}}'/>
                         </div>
-                        <div class="form-group col-xs-12 col-md-12" style="margin-bottom:0px">
-                          <label><span style="width:155px;display:block;">权限列表：</span></label>
-                        </div>
-                        <div class="form-group col-xs-12 col-md-12" style="display:block;overflow:hidden;">
-                        @if (isset($show['permissions']))
-                        @foreach($show['permissions'] as $permission)
-                            <label class="col-md-2">
-                              <input type="checkbox" class="minimal" name="permission_id[]" value="{{ $permission->id }}" {{isset($show['selected_permissions'][$permission->id])?"checked":''}} /> {{ $permission->description }}
-                            </label>
-                        @endforeach
-                        @endif
+                        <div class="form-group col-xs-12 col-md-12">
+                            <div id="permission-tree"></div>
                         </div>
                         
                         
                     </div>
                     <div class="box-footer text-left">
                         <input name='id' type="hidden"  value='{{isset($show['role']->id)?$show['role']->id:''}}'/>
-                        <button type="submit" class="btn btn-primary">保存</button>
+                        <input id="permission_ids" class="hide" type="hidden" value="{{ implode(",", $show['selected_permissions']) }}" />
+                        <button type="submit" class="btn btn-primary" id="saveBtn">保存</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </section>
-</div>
-  
+
+<script src="{{ asset ("/statics/js/permission-tree.js") }}"></script>
+<script type="text/javascript">
+    $(function () {
+
+        $("#permission-tree").permTreeView({
+            permsData: {!! json_encode($treeView) !!}
+        });
+
+        $("#saveBtn").click(function(e) {
+            e.preventDefault();
+            permission_ids = $("#permission_ids").val();
+
+            if ("" != permission_ids) {
+
+                permission_ids = permission_ids.split(",").map(function(elem, index) {
+                    return parseInt(elem);
+                });
+                for (var i = 0; i < permission_ids.length; i++) {
+
+                    $("#form").append('<input name="permission_id[]" id="permission_ids" type="hidden" value='+permission_ids[i]+' />');
+                }
+            } else {
+
+                $("#form").append('<input name="permission_id[]" id="permission_ids" type="hidden" value="" />');
+            }
+
+            $("#form").submit();
+        });
+    });
+</script>
+
 @endsection
